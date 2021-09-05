@@ -1,0 +1,56 @@
+package libprotoconf
+
+import (
+	stdlog "log"
+	"os"
+
+	"github.com/go-logr/logr"
+	"github.com/go-logr/logr/funcr"
+	"github.com/go-logr/stdr"
+	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/reflect/protoreflect"
+)
+
+type Config struct {
+	p      proto.Message
+	Logger logr.Logger
+}
+
+func NewConfig(p proto.Message) *Config {
+	return &Config{p: p, Logger: funcr.New(func(prefix, args string) {}, funcr.Options{})}
+}
+
+func (c *Config) SetLogger(logger logr.Logger) logr.Logger {
+	c.Logger = logger
+	return c.Logger
+}
+
+func (c *Config) LoggerWithLevel(v int) logr.Logger {
+	stdr.SetVerbosity(v)
+	return c.SetLogger(
+		stdr.NewWithOptions(
+			stdlog.New(os.Stderr, "", stdlog.LstdFlags),
+			stdr.Options{LogCaller: stdr.None},
+		).WithName("libprotoconf"))
+}
+
+func (c *Config) DefaultLogger() logr.Logger {
+	return c.LoggerWithLevel(1)
+}
+
+func (c *Config) DebugLogger() logr.Logger {
+	return c.LoggerWithLevel(10)
+}
+
+func (c *Config) iterateFields(f func(protoreflect.FieldDescriptor) error) error {
+	r := c.p.ProtoReflect()
+	fields := r.Descriptor().Fields()
+	c.Logger.V(10).Info("got reflector", "messageType", r.Descriptor().FullName(), "fields", fields.Len())
+	for i := 0; i < fields.Len(); i++ {
+		err := f(fields.Get(i))
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
