@@ -12,13 +12,13 @@ import (
 )
 
 type Config struct {
-	p            proto.Message
+	msg          proto.Message
 	Logger       logr.Logger
 	envKeyPrefix string
 }
 
 func NewConfig(p proto.Message) *Config {
-	c := &Config{p: p, Logger: funcr.New(func(prefix, args string) {}, funcr.Options{})}
+	c := &Config{msg: p, Logger: funcr.New(func(prefix, args string) {}, funcr.Options{})}
 	c.SetEnvKeyPrefix(string(p.ProtoReflect().Descriptor().FullName()))
 	return c
 }
@@ -46,7 +46,7 @@ func (c *Config) DebugLogger() logr.Logger {
 }
 
 func (c *Config) iterateFields(f func(protoreflect.FieldDescriptor) error) error {
-	r := c.p.ProtoReflect()
+	r := c.msg.ProtoReflect()
 	fields := r.Descriptor().Fields()
 	c.Logger.V(10).Info("got reflector", "messageType", r.Descriptor().FullName(), "fields", fields.Len())
 	for i := 0; i < fields.Len(); i++ {

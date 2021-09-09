@@ -21,9 +21,9 @@ func (f *flaggable) String() string {
 	f.cfg.Logger.V(10).Info("returning string", "fd", f.fd.FullName())
 	if f.fd.Kind() == protoreflect.EnumKind {
 		values := f.fd.Enum().Values()
-		return string(values.Get(int(f.cfg.p.ProtoReflect().Get(f.fd).Enum())).Name())
+		return string(values.Get(int(f.cfg.msg.ProtoReflect().Get(f.fd).Enum())).Name())
 	}
-	v := f.cfg.p.ProtoReflect().Get(f.fd)
+	v := f.cfg.msg.ProtoReflect().Get(f.fd)
 	if v.IsValid() {
 		return fmt.Sprintf("%v", v)
 	}
@@ -42,31 +42,31 @@ func (f *flaggable) Set(value string) error {
 		if err != nil {
 			return err
 		}
-		f.cfg.p.ProtoReflect().Set(f.fd, protoreflect.ValueOfBool(b))
+		f.cfg.msg.ProtoReflect().Set(f.fd, protoreflect.ValueOfBool(b))
 	case protoreflect.Int32Kind, protoreflect.Sint32Kind, protoreflect.Sfixed32Kind:
 		i, err := strconv.ParseInt(value, 10, 32)
 		if err != nil {
 			return err
 		}
-		f.cfg.p.ProtoReflect().Set(f.fd, protoreflect.ValueOf(i))
+		f.cfg.msg.ProtoReflect().Set(f.fd, protoreflect.ValueOf(i))
 	case protoreflect.Int64Kind, protoreflect.Sint64Kind, protoreflect.Sfixed64Kind:
 		i, err := strconv.ParseInt(value, 10, 64)
 		if err != nil {
 			return err
 		}
-		f.cfg.p.ProtoReflect().Set(f.fd, protoreflect.ValueOf(i))
+		f.cfg.msg.ProtoReflect().Set(f.fd, protoreflect.ValueOf(i))
 	case protoreflect.Uint32Kind, protoreflect.Fixed32Kind:
 		i, err := strconv.ParseUint(value, 10, 32)
 		if err != nil {
 			return err
 		}
-		f.cfg.p.ProtoReflect().Set(f.fd, protoreflect.ValueOf(i))
+		f.cfg.msg.ProtoReflect().Set(f.fd, protoreflect.ValueOf(i))
 	case protoreflect.Uint64Kind, protoreflect.Fixed64Kind:
 		i, err := strconv.ParseUint(value, 10, 64)
 		if err != nil {
 			return err
 		}
-		f.cfg.p.ProtoReflect().Set(f.fd, protoreflect.ValueOf(i))
+		f.cfg.msg.ProtoReflect().Set(f.fd, protoreflect.ValueOf(i))
 	case protoreflect.EnumKind:
 		values := f.fd.Enum().Values()
 		pname := protoreflect.Name(value)
@@ -75,9 +75,9 @@ func (f *flaggable) Set(value string) error {
 			return fmt.Errorf(`invalid option %s value for field "%s"`, value, f.fd.Name())
 		}
 		f.cfg.Logger.V(10).Info("trying to set enum field", "input", value, "name", pname, "result", v.FullName(), "number", v.Number())
-		f.cfg.p.ProtoReflect().Set(f.fd, protoreflect.ValueOfEnum(v.Number()))
+		f.cfg.msg.ProtoReflect().Set(f.fd, protoreflect.ValueOfEnum(v.Number()))
 	case protoreflect.StringKind:
-		f.cfg.p.ProtoReflect().Set(f.fd, protoreflect.ValueOfString(value))
+		f.cfg.msg.ProtoReflect().Set(f.fd, protoreflect.ValueOfString(value))
 	default:
 		return fmt.Errorf("cannot set field %s, kind %s not implemented", f.fd.JSONName(), f.fd.Kind())
 	}
@@ -86,7 +86,7 @@ func (f *flaggable) Set(value string) error {
 
 // FlagSet returns a flag.FlagSet instance for the config
 func (c *Config) DefaultFlagSet() *flag.FlagSet {
-	fs := flag.NewFlagSet(string(c.p.ProtoReflect().Descriptor().FullName()), flag.ExitOnError)
+	fs := flag.NewFlagSet(string(c.msg.ProtoReflect().Descriptor().FullName()), flag.ExitOnError)
 	c.PopulateFlagSet(fs)
 	return fs
 }
