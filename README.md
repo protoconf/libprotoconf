@@ -5,9 +5,9 @@ Runtime configuration made easy with `protocol-buffers`.
 ## Goals
 
 Developers can define their desired configuration struct in a proto file, then get all sorts of ways to load that configuration into their software runtime:
-- [ ] Populate config from environment variables
+- [x] Populate config from environment variables
 - [x] Get a `flag.FlagSet` instance
-- [ ]Read and merge configs from global, user and workspace locations (`/etc/mypackage/`, `$USER/.mypackage/`, `$(pwd)/.mypackage/`)
+- [ ] Read and merge configs from global, user and workspace locations (`/etc/mypackage/`, `$USER/.mypackage/`, `$(pwd)/.mypackage/`)
 - Allow configuration changes dynamically
     - [ ] Reload on Signals
     - [ ] Reload on file change (`inotify`)
