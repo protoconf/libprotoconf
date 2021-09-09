@@ -12,12 +12,15 @@ import (
 )
 
 type Config struct {
-	p      proto.Message
-	Logger logr.Logger
+	p            proto.Message
+	Logger       logr.Logger
+	envKeyPrefix string
 }
 
 func NewConfig(p proto.Message) *Config {
-	return &Config{p: p, Logger: funcr.New(func(prefix, args string) {}, funcr.Options{})}
+	c := &Config{p: p, Logger: funcr.New(func(prefix, args string) {}, funcr.Options{})}
+	c.SetEnvKeyPrefix(string(p.ProtoReflect().Descriptor().FullName()))
+	return c
 }
 
 func (c *Config) SetLogger(logger logr.Logger) logr.Logger {

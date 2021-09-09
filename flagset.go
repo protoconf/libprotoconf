@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"strconv"
+	"strings"
 
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
@@ -14,7 +15,23 @@ type flaggable struct {
 }
 
 func (f *flaggable) String() string {
+	if f.fd == nil || f.cfg == nil {
+		return ""
+	}
+	f.cfg.Logger.V(10).Info("returning string", "fd", f.fd.FullName())
+	if f.fd.Kind() == protoreflect.EnumKind {
+		values := f.fd.Enum().Values()
+		return string(values.Get(int(f.cfg.p.ProtoReflect().Get(f.fd).Enum())).Name())
+	}
+	v := f.cfg.p.ProtoReflect().Get(f.fd)
+	if v.IsValid() {
+		return fmt.Sprintf("%v", v)
+	}
 	return ""
+}
+
+func (f *flaggable) IsBoolFlag() bool {
+	return f.fd.Kind() == protoreflect.BoolKind
 }
 
 func (f *flaggable) Set(value string) error {
@@ -57,7 +74,7 @@ func (f *flaggable) Set(value string) error {
 		if v == nil {
 			return fmt.Errorf(`invalid option %s value for field "%s"`, value, f.fd.Name())
 		}
-
+		f.cfg.Logger.V(10).Info("trying to set enum field", "input", value, "name", pname, "result", v.FullName(), "number", v.Number())
 		f.cfg.p.ProtoReflect().Set(f.fd, protoreflect.ValueOfEnum(v.Number()))
 	case protoreflect.StringKind:
 		f.cfg.p.ProtoReflect().Set(f.fd, protoreflect.ValueOfString(value))
@@ -68,13 +85,17 @@ func (f *flaggable) Set(value string) error {
 }
 
 // FlagSet returns a flag.FlagSet instance for the config
-func (c *Config) FlagSet() *flag.FlagSet {
-	c.Logger.V(4).Info("creating a flagset")
+func (c *Config) DefaultFlagSet() *flag.FlagSet {
 	fs := flag.NewFlagSet(string(c.p.ProtoReflect().Descriptor().FullName()), flag.ExitOnError)
+	c.PopulateFlagSet(fs)
+	return fs
+}
+
+func (c *Config) PopulateFlagSet(fs *flag.FlagSet) {
+	c.Logger.V(4).Info("creating a flagset")
 	fs.Usage = func() {
 		fs.PrintDefaults()
 	}
-	// for i := 0; i < fields.Len(); i++ {
 	c.iterateFields(func(f protoreflect.FieldDescriptor) error {
 		c.Logger.V(4).Info("got field", "name", f.Name(), "fullName", f.FullName(), "type", f.Kind().GoString())
 		switch f.Kind() {
@@ -83,16 +104,27 @@ func (c *Config) FlagSet() *flag.FlagSet {
 		case protoreflect.EnumKind:
 			fl := &flaggable{fd: f, cfg: c}
 			values := f.Enum().Values()
-			valueStrings := make([]string, values.Len())
+			var valueStrings []string
 			for j := 0; j < values.Len(); j++ {
-				valueStrings = append(valueStrings, string(values.Get(j).Name()))
+				if str := string(values.Get(j).Name()); str != "" {
+					c.Logger.V(10).Info("got enum option", "len", values.Len(), "j", j, "value", str)
+					valueStrings = append(valueStrings, str)
+				}
 			}
-			fs.Var(fl, f.JSONName(), fmt.Sprintf("type: %s, default: %s, options: %s", f.Kind(), values.Get(int(c.p.ProtoReflect().Get(f).Enum())).Name(), valueStrings))
+			fs.Var(fl, f.JSONName(), fmt.Sprintf(
+				"env key: %s\ntype: %s, options: [%s]",
+				toEnvKey(c.envKeyPrefix, string(f.Name())),
+				f.Kind(),
+				strings.Join(valueStrings, ", ")),
+			)
 		default:
 			fl := &flaggable{fd: f, cfg: c}
-			fs.Var(fl, f.JSONName(), fmt.Sprintf("type: %s, default: %s", f.Kind(), c.p.ProtoReflect().Get(f)))
+			fs.Var(fl, f.JSONName(), fmt.Sprintf(
+				"env key: %s\ntype: %s",
+				toEnvKey(c.envKeyPrefix, string(f.Name())),
+				f.Kind(),
+			))
 		}
 		return nil
 	})
-	return fs
 }

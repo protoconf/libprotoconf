@@ -5,19 +5,23 @@ import (
 	"os"
 
 	"github.com/protoconf/libprotoconf"
+	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/types/known/apipb"
 )
 
 func main() {
-	cfg := &apipb.Api{Name: "protoconf", Version: "v1"}
+	cfg := &apipb.Api{
+		Name:    "protoconf",
+		Version: "v1",
+	}
 	lpc := libprotoconf.NewConfig(cfg)
 	lpc.DebugLogger()
-	lpc.Environment("LIBPROTOCONF_TEST")
-	fs := lpc.FlagSet()
+	fs := lpc.DefaultFlagSet()
 	lpc.Logger.Info("starting", "args", os.Args)
 	fs.Parse(os.Args[1:])
 	if fs.Parsed() {
 		lpc.Logger.Info("result", "config", fmt.Sprintf("%v", cfg))
+		fmt.Print(protojson.Format(cfg))
 	} else {
 		fs.Usage()
 	}

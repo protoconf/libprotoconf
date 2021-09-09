@@ -2,14 +2,19 @@ package libprotoconf
 
 import (
 	"os"
+	"regexp"
 	"strings"
 
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
-func (c *Config) Environment(prefix string) error {
+func (c *Config) SetEnvKeyPrefix(p string) {
+	c.envKeyPrefix = p
+}
+
+func (c *Config) Environment() error {
 	return c.iterateFields(func(fd protoreflect.FieldDescriptor) error {
-		envName := strings.ToUpper(strings.Join([]string{prefix, fd.TextName()}, "_"))
+		envName := toEnvKey(c.envKeyPrefix, string(fd.Name()))
 		c.Logger.V(4).Info("trying to read environtment variable", "variable", envName)
 		result := os.Getenv(envName)
 		if result != "" {
@@ -19,4 +24,11 @@ func (c *Config) Environment(prefix string) error {
 		}
 		return nil
 	})
+}
+
+func toEnvKey(strs ...string) string {
+	reg, _ := regexp.Compile("[^a-zA-Z0-9]+")
+	envName := strings.ToUpper(strings.Join(strs, "_"))
+	return reg.ReplaceAllString(envName, "_")
+
 }

@@ -1,6 +1,7 @@
 package libprotoconf
 
 import (
+	"flag"
 	"testing"
 
 	"google.golang.org/protobuf/proto"
@@ -44,13 +45,24 @@ func TestConfig_FlagSet(t *testing.T) {
 			},
 			want: &timestamppb.Timestamp{Seconds: 456, Nanos: 123},
 		},
+		{
+			name: "help",
+			fields: fields{
+				p:    &apipb.Api{},
+				args: []string{"-h"},
+			},
+			want: &apipb.Api{},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			c := NewConfig(tt.fields.p)
 			c.DebugLogger()
+			c.Environment()
 			c.SetLogger(c.Logger.WithName(t.Name()))
-			if c.FlagSet().Parse(tt.fields.args); !proto.Equal(tt.fields.p, tt.want) {
+			fs := flag.NewFlagSet(tt.name, flag.ContinueOnError)
+			c.PopulateFlagSet(fs)
+			if fs.Parse(tt.fields.args); !proto.Equal(tt.fields.p, tt.want) {
 				t.Errorf("Config.FlagSet() = %v, want %v", tt.fields.p, tt.want)
 			}
 		})

@@ -28,7 +28,7 @@ func TestConfig_Environment(t *testing.T) {
 			args: args{
 				prefix: "test",
 			},
-			wantErr: true,
+			wantErr: false,
 		},
 		// TODO: Add test cases.
 	}
@@ -38,7 +38,7 @@ func TestConfig_Environment(t *testing.T) {
 				p: tt.fields.p,
 			}
 			c.DebugLogger()
-			if err := c.Environment(tt.args.prefix); (err != nil) != tt.wantErr {
+			if err := c.Environment(); (err != nil) != tt.wantErr {
 				t.Errorf("Config.Environment() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
