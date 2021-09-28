@@ -1,12 +1,14 @@
 package libprotoconf
 
 import (
+	"fmt"
 	"os"
 	"reflect"
 	"sort"
 	"testing"
 
 	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/types/known/apipb"
 )
 
@@ -177,6 +179,59 @@ func TestConfig_LoadFromDefaultDirs(t *testing.T) {
 			sort.Strings(tt.want)
 			if !reflect.DeepEqual(c.config.ConfigDirs, tt.want) {
 				t.Errorf("Config.LoadFromDefaultDirs() =  %v, %v", c.config.ConfigDirs, tt.want)
+			}
+		})
+	}
+}
+
+func TestConfig_DefaultLogger(t *testing.T) {
+	c := NewConfig(&apipb.Api{})
+	l := c.DefaultLogger()
+	if l.GetSink().Enabled(10) {
+		t.Error("verbose logging should be disabled")
+	}
+	if !l.GetSink().Enabled(1) {
+		t.Error("info logging should be enabled")
+	}
+}
+
+func TestConfig_DebugLogger(t *testing.T) {
+	c := NewConfig(&apipb.Api{})
+	l := c.DebugLogger()
+	if !l.GetSink().Enabled(10) {
+		t.Error("verbose logging should be enabled")
+	}
+}
+
+func TestConfig_iterateFields(t *testing.T) {
+	type fields struct {
+		msg proto.Message
+	}
+	type args struct {
+		f func(protoreflect.FieldDescriptor) error
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		wantErr bool
+	}{
+		{
+			name: "error",
+			fields: fields{
+				msg: &apipb.Api{},
+			},
+			args: args{
+				f: func(fd protoreflect.FieldDescriptor) error { return fmt.Errorf("intendend error") },
+			},
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := NewConfig(tt.fields.msg)
+			if err := c.iterateFields(tt.args.f); (err != nil) != tt.wantErr {
+				t.Errorf("Config.iterateFields() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 	}
