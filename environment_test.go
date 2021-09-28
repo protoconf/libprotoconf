@@ -38,6 +38,7 @@ func TestConfig_Environment(t *testing.T) {
 				msg: tt.fields.p,
 			}
 			c.DebugLogger()
+			c.SetLogger(c.Logger.WithName(t.Name()))
 			if err := c.Environment(); (err != nil) != tt.wantErr {
 				t.Errorf("Config.Environment() error = %v, wantErr %v", err, tt.wantErr)
 			}
