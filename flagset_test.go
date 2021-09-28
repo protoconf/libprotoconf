@@ -58,7 +58,6 @@ func TestConfig_FlagSet(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			c := NewConfig(tt.fields.p)
 			c.DebugLogger()
-			c.Environment()
 			c.SetLogger(c.Logger.WithName(t.Name()))
 			fs := flag.NewFlagSet(tt.name, flag.ContinueOnError)
 			c.PopulateFlagSet(fs)

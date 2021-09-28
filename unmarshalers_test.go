@@ -43,6 +43,15 @@ func TestConfig_Unmarshal(t *testing.T) {
 			wantErr: false,
 		},
 		{
+			name: "bad_yaml",
+			fields: fields{
+				msg: &apipb.Api{},
+			},
+			args:    args{filename: "api.yaml", data: []byte("name: protoconfversion: v1")},
+			wants:   &apipb.Api{},
+			wantErr: true,
+		},
+		{
 			name: "pbtext",
 			fields: fields{
 				msg: &apipb.Api{},
@@ -71,6 +80,16 @@ func TestConfig_Unmarshal(t *testing.T) {
 			wantErr: false,
 		},
 		{
+			name: "bad_base64",
+			fields: fields{
+				msg: &apipb.Api{},
+			},
+			args: args{filename: "api.base64", data: []byte(base64.URLEncoding.EncodeToString(
+				getBinary(&apipb.Api{Name: "protoconf", Version: "v1"})) + "bad")},
+			wants:   &apipb.Api{},
+			wantErr: true,
+		},
+		{
 			name: "jsonnet",
 			fields: fields{
 				msg: &apipb.Api{},
@@ -78,6 +97,24 @@ func TestConfig_Unmarshal(t *testing.T) {
 			args:    args{filename: "api.jsonnet", data: []byte(`{name: "protoconf", version: self.name + "/v1"}`)},
 			wants:   &apipb.Api{Name: "protoconf", Version: "protoconf/v1"},
 			wantErr: false,
+		},
+		{
+			name: "bad_jsonnet",
+			fields: fields{
+				msg: &apipb.Api{},
+			},
+			args:    args{filename: "api.jsonnet", data: []byte(`{name: "protoconf", version: self.name + "/v1"`)},
+			wants:   &apipb.Api{},
+			wantErr: true,
+		},
+		{
+			name: "dummy_extension",
+			fields: fields{
+				msg: &apipb.Api{},
+			},
+			args:    args{filename: "api.dummy", data: []byte(`blah`)},
+			wants:   &apipb.Api{},
+			wantErr: true,
 		},
 	}
 	for _, tt := range tests {
