@@ -4,7 +4,10 @@ import (
 	"flag"
 	"testing"
 
+	pb "github.com/protoconf/protoconf/datatypes/proto/v1"
+	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/types/known/anypb"
 	"google.golang.org/protobuf/types/known/apipb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"google.golang.org/protobuf/types/known/typepb"
@@ -67,4 +70,13 @@ func TestConfig_FlagSet(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestMarshalAny(t *testing.T) {
+
+	ts := &apipb.Api{Name: "protoconf", Version: "v1", Syntax: typepb.Syntax_SYNTAX_PROTO3}
+	a, _ := anypb.New(ts)
+	v := &pb.ProtoconfValue{ProtoFile: "hello.proto", Value: a}
+	t.Log(protojson.Format(v))
+	t.Fail()
 }

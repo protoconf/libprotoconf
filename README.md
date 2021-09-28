@@ -14,6 +14,13 @@ Developers can define their desired configuration struct in a proto file, then g
     - [ ] `gRPC`/`rest` configuration endpoints
     - [ ] key-value stores (`consul`, `etcd`, `zookeeper`, `redis`)
     - [ ] protoconf gRPC streaming agent
+- Formats:
+    - [x] JSON (`.json`)
+    - [x] YAML (`.yaml`, `.yml`)
+    - [x] pbtext (`.pb`)
+    - [x] pb binary (`.data`)
+    - [x] pb binary with base64 encoding (`.base64`, `.b64`)
+    - [x] jsonnet (`.jsonnet`)
 - [ ] Pre/Post hooks for dynamic changes
 - Debugging features
     - [ ] `ShowConfig()` method (available via gRPC/rest)
