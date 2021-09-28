@@ -67,6 +67,12 @@ func (f *flaggable) Set(value string) error {
 			return err
 		}
 		f.cfg.msg.ProtoReflect().Set(f.fd, protoreflect.ValueOf(i))
+	case protoreflect.FloatKind, protoreflect.DoubleKind:
+		i, err := strconv.ParseFloat(value, 64)
+		if err != nil {
+			return err
+		}
+		f.cfg.msg.ProtoReflect().Set(f.fd, protoreflect.ValueOf(i))
 	case protoreflect.EnumKind:
 		values := f.fd.Enum().Values()
 		pname := protoreflect.Name(value)

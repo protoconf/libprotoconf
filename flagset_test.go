@@ -8,6 +8,7 @@ import (
 	"google.golang.org/protobuf/types/known/apipb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"google.golang.org/protobuf/types/known/typepb"
+	"google.golang.org/protobuf/types/known/wrapperspb"
 )
 
 func TestConfig_FlagSet(t *testing.T) {
@@ -52,6 +53,54 @@ func TestConfig_FlagSet(t *testing.T) {
 				args: []string{"-h"},
 			},
 			want: &apipb.Api{},
+		},
+		{
+			name: "bool_value_true",
+			fields: fields{
+				p:    &wrapperspb.BoolValue{},
+				args: []string{"-value", "true"},
+			},
+			want: &wrapperspb.BoolValue{Value: true},
+		},
+		{
+			name: "bool_value_false",
+			fields: fields{
+				p:    &wrapperspb.BoolValue{},
+				args: []string{"-value=false"},
+			},
+			want: &wrapperspb.BoolValue{Value: false},
+		},
+		{
+			name: "uint32",
+			fields: fields{
+				p:    &wrapperspb.UInt32Value{},
+				args: []string{"-value", "123"},
+			},
+			want: &wrapperspb.UInt32Value{Value: 123},
+		},
+		{
+			name: "uint64",
+			fields: fields{
+				p:    &wrapperspb.UInt64Value{},
+				args: []string{"-value", "123"},
+			},
+			want: &wrapperspb.UInt64Value{Value: 123},
+		},
+		{
+			name: "float64",
+			fields: fields{
+				p:    &wrapperspb.FloatValue{},
+				args: []string{"-value", "123.456"},
+			},
+			want: &wrapperspb.FloatValue{Value: 123.456},
+		},
+		{
+			name: "double",
+			fields: fields{
+				p:    &wrapperspb.DoubleValue{},
+				args: []string{"-value", "123.456"},
+			},
+			want: &wrapperspb.DoubleValue{Value: 123.456},
 		},
 	}
 	for _, tt := range tests {
