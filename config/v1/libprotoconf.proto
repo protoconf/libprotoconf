@@ -1,0 +1,9 @@
+syntax = "proto3";
+
+package libprotoconf.config.v1;
+
+option go_package = "github.com/protoconf/libprotoconf/config/v1";
+
+message LibprotoconfConfig {
+    repeated string config_dirs = 1;
+}

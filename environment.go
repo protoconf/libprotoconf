@@ -30,5 +30,9 @@ func toEnvKey(strs ...string) string {
 	reg, _ := regexp.Compile("[^a-zA-Z0-9]+")
 	envName := strings.ToUpper(strings.Join(strs, "_"))
 	return reg.ReplaceAllString(envName, "_")
+}
 
+func pkgToPath(pkgName string) string {
+	reg, _ := regexp.Compile("[^a-zA-Z0-9]+")
+	return reg.ReplaceAllString(pkgName, "/")
 }
