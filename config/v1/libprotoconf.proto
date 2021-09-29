@@ -5,5 +5,10 @@ package libprotoconf.config.v1;
 option go_package = "github.com/protoconf/libprotoconf/config/v1";
 
 message LibprotoconfConfig {
-    repeated string config_dirs = 1;
+    repeated Loadable config_dirs = 1;
+    
+    message Loadable {
+        uint32 priority = 1;
+        string path = 2;
+    }
 }
