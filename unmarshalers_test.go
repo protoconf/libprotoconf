@@ -6,6 +6,7 @@ import (
 
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/apipb"
+	"google.golang.org/protobuf/types/known/sourcecontextpb"
 	"google.golang.org/protobuf/types/known/typepb"
 )
 
@@ -113,6 +114,42 @@ func TestConfig_Unmarshal(t *testing.T) {
 				msg: &apipb.Api{},
 			},
 			args:    args{filename: "api.dummy", data: []byte(`blah`)},
+			wants:   &apipb.Api{},
+			wantErr: true,
+		},
+		{
+			name: "toml",
+			fields: fields{
+				msg: &apipb.Api{},
+			},
+			args: args{filename: "api.toml", data: []byte(`
+			name = "protoconf"
+			version = "v1"
+			methods = [
+				{name = "GET"}
+			]
+			source_context = {
+				file_name = "hello"
+			}
+			`)},
+			wants: &apipb.Api{
+				Name:    "protoconf",
+				Version: "v1",
+				Methods: []*apipb.Method{
+					{Name: "GET"},
+				},
+				SourceContext: &sourcecontextpb.SourceContext{FileName: "hello"},
+			},
+			wantErr: false,
+		},
+		{
+			name: "bad_toml",
+			fields: fields{
+				msg: &apipb.Api{},
+			},
+			args: args{filename: "api.toml", data: []byte(`
+			name = "protoconf
+			`)},
 			wants:   &apipb.Api{},
 			wantErr: true,
 		},

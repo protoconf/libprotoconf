@@ -129,9 +129,11 @@ func (c *Config) DebugLogger() logr.Logger {
 }
 
 func (c *Config) iterateFields(f func(protoreflect.FieldDescriptor) error) error {
-	r := c.msg.ProtoReflect()
-	fields := r.Descriptor().Fields()
-	c.Logger.V(10).Info("got reflector", "messageType", r.Descriptor().FullName(), "fields", fields.Len())
+	return iterateFields(c.msg.ProtoReflect(), f)
+}
+
+func iterateFields(msg protoreflect.Message, f func(protoreflect.FieldDescriptor) error) error {
+	fields := msg.Descriptor().Fields()
 	for i := 0; i < fields.Len(); i++ {
 		err := f(fields.Get(i))
 		if err != nil {
