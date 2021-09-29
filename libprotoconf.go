@@ -5,12 +5,12 @@ import (
 	stdlog "log"
 	"os"
 	"path/filepath"
+	"sort"
 
 	"github.com/go-logr/logr"
 	"github.com/go-logr/logr/funcr"
 	"github.com/go-logr/stdr"
 	v1 "github.com/protoconf/libprotoconf/config/v1"
-	"github.com/scylladb/go-set/strset"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
@@ -41,7 +41,7 @@ func (c *Config) LoadFromDefaultDirs() {
 
 func (c *Config) LoadFromSystemDir() error {
 	for _, p := range c.getPackageTree() {
-		c.AppendLoadDir(filepath.Join("/etc", pkgToPath(p)))
+		c.AppendLoadDir(100, filepath.Join("/etc", pkgToPath(p)))
 	}
 	return nil
 }
@@ -49,7 +49,7 @@ func (c *Config) LoadFromSystemDir() error {
 func (c *Config) LoadFromUserDir() error {
 	for _, p := range c.getPackageTree() {
 		if home, err := os.UserHomeDir(); err == nil {
-			c.AppendLoadDir(filepath.Join(home, "."+pkgToPath(p)))
+			c.AppendLoadDir(90, filepath.Join(home, "."+pkgToPath(p)))
 		} else {
 			return err
 		}
@@ -60,7 +60,7 @@ func (c *Config) LoadFromUserDir() error {
 func (c *Config) LoadFromWorkspace() error {
 	ws, err := c.DetectWorkspace()
 	if err == nil {
-		c.AppendLoadDir(ws)
+		c.AppendLoadDir(80, ws)
 	}
 	return err
 }
@@ -94,17 +94,15 @@ func (c *Config) getPackageTree() []string {
 	return result
 }
 
-func (c *Config) AppendLoadDir(paths ...string) error {
-	set := strset.New(c.config.ConfigDirs...)
+func (c *Config) AppendLoadDir(priority uint32, paths ...string) error {
 	for _, path := range paths {
 		if abs, err := filepath.Abs(path); err == nil {
-			set.Add(abs)
+			c.config.ConfigDirs = append(c.config.ConfigDirs, &v1.LibprotoconfConfig_Loadable{Priority: priority, Path: abs})
 		} else {
 			return err
 		}
 	}
-	c.config.ConfigDirs = set.List()
-	// sort.Strings(c.config.ConfigDirs)
+	sort.Stable(v1.ByPrio(c.config.ConfigDirs))
 	return nil
 }
 

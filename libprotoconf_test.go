@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"os"
 	"reflect"
-	"sort"
 	"testing"
 
+	v1 "github.com/protoconf/libprotoconf/config/v1"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/types/known/apipb"
@@ -19,7 +19,7 @@ func TestConfig_LoadFromSystemDir(t *testing.T) {
 	tests := []struct {
 		name    string
 		fields  fields
-		want    []string
+		want    []*v1.LibprotoconfConfig_Loadable
 		wantErr bool
 	}{
 		{
@@ -27,7 +27,10 @@ func TestConfig_LoadFromSystemDir(t *testing.T) {
 			fields: fields{
 				msg: &apipb.Api{},
 			},
-			want:    []string{"/etc/google", "/etc/google/protobuf"},
+			want: []*v1.LibprotoconfConfig_Loadable{
+				&v1.LibprotoconfConfig_Loadable{Priority: 100, Path: "/etc/google/protobuf"},
+				&v1.LibprotoconfConfig_Loadable{Priority: 100, Path: "/etc/google"},
+			},
 			wantErr: false,
 		},
 	}
@@ -37,8 +40,6 @@ func TestConfig_LoadFromSystemDir(t *testing.T) {
 			if err := c.LoadFromSystemDir(); (err != nil) != tt.wantErr {
 				t.Errorf("Config.LoadFromSystemDir() error = %v, wantErr %v", err, tt.wantErr)
 			}
-			sort.Strings(c.config.ConfigDirs)
-			sort.Strings(tt.want)
 			if !reflect.DeepEqual(c.config.ConfigDirs, tt.want) {
 				t.Errorf("Config.LoadFromSystemDir() =  %v, %v", c.config.ConfigDirs, tt.want)
 			}
@@ -113,7 +114,7 @@ func TestConfig_LoadFromUserDir(t *testing.T) {
 	tests := []struct {
 		name    string
 		fields  fields
-		want    []string
+		want    []*v1.LibprotoconfConfig_Loadable
 		wantErr bool
 	}{
 		{
@@ -122,7 +123,10 @@ func TestConfig_LoadFromUserDir(t *testing.T) {
 				msg:  &apipb.Api{},
 				home: "/tmp",
 			},
-			want:    []string{"/tmp/.google", "/tmp/.google/protobuf"},
+			want: []*v1.LibprotoconfConfig_Loadable{
+				&v1.LibprotoconfConfig_Loadable{Priority: 90, Path: "/tmp/.google/protobuf"},
+				&v1.LibprotoconfConfig_Loadable{Priority: 90, Path: "/tmp/.google"},
+			},
 			wantErr: false,
 		},
 		{
@@ -142,10 +146,8 @@ func TestConfig_LoadFromUserDir(t *testing.T) {
 			if err := c.LoadFromUserDir(); (err != nil) != tt.wantErr {
 				t.Errorf("Config.LoadFromUserDir() error = %v, wantErr %v", err, tt.wantErr)
 			}
-			sort.Strings(c.config.ConfigDirs)
-			sort.Strings(tt.want)
 			if !reflect.DeepEqual(c.config.ConfigDirs, tt.want) {
-				t.Errorf("Config.LoadFromUserDir() =  %v, %v", c.config.ConfigDirs, tt.want)
+				t.Errorf("Config.LoadFromUserDir() =  %v, want %v", c.config.ConfigDirs, tt.want)
 			}
 		})
 	}
@@ -159,7 +161,7 @@ func TestConfig_LoadFromDefaultDirs(t *testing.T) {
 	tests := []struct {
 		name   string
 		fields fields
-		want   []string
+		want   []*v1.LibprotoconfConfig_Loadable
 	}{
 		{
 			name: "test",
@@ -167,7 +169,12 @@ func TestConfig_LoadFromDefaultDirs(t *testing.T) {
 				msg:  &apipb.Api{},
 				home: "/tmp",
 			},
-			want: []string{"/etc/google", "/etc/google/protobuf", "/tmp/.google", "/tmp/.google/protobuf"},
+			want: []*v1.LibprotoconfConfig_Loadable{
+				&v1.LibprotoconfConfig_Loadable{Priority: 100, Path: "/etc/google/protobuf"},
+				&v1.LibprotoconfConfig_Loadable{Priority: 100, Path: "/etc/google"},
+				&v1.LibprotoconfConfig_Loadable{Priority: 90, Path: "/tmp/.google/protobuf"},
+				&v1.LibprotoconfConfig_Loadable{Priority: 90, Path: "/tmp/.google"},
+			},
 		},
 	}
 	for _, tt := range tests {
@@ -175,8 +182,6 @@ func TestConfig_LoadFromDefaultDirs(t *testing.T) {
 			c := NewConfig(tt.fields.msg)
 			os.Setenv("HOME", tt.fields.home)
 			c.LoadFromDefaultDirs()
-			sort.Strings(c.config.ConfigDirs)
-			sort.Strings(tt.want)
 			if !reflect.DeepEqual(c.config.ConfigDirs, tt.want) {
 				t.Errorf("Config.LoadFromDefaultDirs() =  %v, %v", c.config.ConfigDirs, tt.want)
 			}
