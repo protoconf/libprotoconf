@@ -1,4 +1,8 @@
-# libprotoconf
+# .//libprotoconf
+
+[![Test and coverage](https://github.com/protoconf/libprotoconf/actions/workflows/ci.yml/badge.svg)](https://github.com/protoconf/libprotoconf/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/protoconf/libprotoconf/branch/main/graph/badge.svg?token=4YsYeTWEYa)](https://codecov.io/gh/protoconf/libprotoconf)
+[![Go Reference](https://pkg.go.dev/badge/github.com/protoconf/libprotoconf.svg)](https://pkg.go.dev/github.com/protoconf/libprotoconf)
 
 Runtime configuration made easy with `protocol-buffers`.
 
