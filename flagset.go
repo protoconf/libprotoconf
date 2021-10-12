@@ -21,7 +21,29 @@ func (f *flaggable) String() string {
 	f.cfg.Logger.V(10).Info("returning string", "fd", f.fd.FullName())
 	if f.fd.Kind() == protoreflect.EnumKind {
 		values := f.fd.Enum().Values()
+		if f.fd.IsList() {
+			list := f.cfg.msg.ProtoReflect().Get(f.fd).List()
+			var arr []string
+			for i := 0; i < list.Len(); i++ {
+				v := list.Get(i)
+				if v.IsValid() {
+					arr = append(arr, fmt.Sprintf("%v", v))
+				}
+			}
+			return fmt.Sprintf("%v", arr)
+		}
 		return string(values.Get(int(f.cfg.msg.ProtoReflect().Get(f.fd).Enum())).Name())
+	}
+	if f.fd.IsList() {
+		list := f.cfg.msg.ProtoReflect().Get(f.fd).List()
+		var arr []string
+		for i := 0; i < list.Len(); i++ {
+			v := list.Get(i)
+			if v.IsValid() {
+				arr = append(arr, fmt.Sprintf("%v", v))
+			}
+		}
+		return fmt.Sprintf("[%v]", strings.Join(arr, ", "))
 	}
 	v := f.cfg.msg.ProtoReflect().Get(f.fd)
 	if v.IsValid() {
@@ -34,59 +56,77 @@ func (f *flaggable) IsBoolFlag() bool {
 	return f.fd.Kind() == protoreflect.BoolKind
 }
 
-func (f *flaggable) Set(value string) error {
-	f.cfg.Logger.V(4).Info("setting field", "value", value, "kind", f.fd.Kind().GoString())
+func (f *flaggable) detect(value string) (protoreflect.Value, error) {
 	switch f.fd.Kind() {
 	case protoreflect.BoolKind:
 		b, err := strconv.ParseBool(value)
 		if err != nil {
-			return err
+			return protoreflect.Value{}, err
 		}
-		f.cfg.msg.ProtoReflect().Set(f.fd, protoreflect.ValueOfBool(b))
+		return protoreflect.ValueOfBool(b), nil
 	case protoreflect.Int32Kind, protoreflect.Sint32Kind, protoreflect.Sfixed32Kind:
 		i, err := strconv.ParseInt(value, 10, 32)
 		if err != nil {
-			return err
+			return protoreflect.Value{}, err
 		}
-		f.cfg.msg.ProtoReflect().Set(f.fd, protoreflect.ValueOf(i))
+		return protoreflect.ValueOf(i), nil
 	case protoreflect.Int64Kind, protoreflect.Sint64Kind, protoreflect.Sfixed64Kind:
 		i, err := strconv.ParseInt(value, 10, 64)
 		if err != nil {
-			return err
+			return protoreflect.Value{}, err
 		}
-		f.cfg.msg.ProtoReflect().Set(f.fd, protoreflect.ValueOf(i))
+		return protoreflect.ValueOf(i), nil
 	case protoreflect.Uint32Kind, protoreflect.Fixed32Kind:
 		i, err := strconv.ParseUint(value, 10, 32)
 		if err != nil {
-			return err
+			return protoreflect.Value{}, err
 		}
-		f.cfg.msg.ProtoReflect().Set(f.fd, protoreflect.ValueOf(i))
+		return protoreflect.ValueOf(i), nil
 	case protoreflect.Uint64Kind, protoreflect.Fixed64Kind:
 		i, err := strconv.ParseUint(value, 10, 64)
 		if err != nil {
-			return err
+			return protoreflect.Value{}, err
 		}
-		f.cfg.msg.ProtoReflect().Set(f.fd, protoreflect.ValueOf(i))
+		return protoreflect.ValueOf(i), nil
 	case protoreflect.FloatKind, protoreflect.DoubleKind:
 		i, err := strconv.ParseFloat(value, 64)
 		if err != nil {
-			return err
+			return protoreflect.Value{}, err
 		}
-		f.cfg.msg.ProtoReflect().Set(f.fd, protoreflect.ValueOf(i))
+		return protoreflect.ValueOf(i), nil
 	case protoreflect.EnumKind:
 		values := f.fd.Enum().Values()
 		pname := protoreflect.Name(value)
 		v := values.ByName(pname)
 		if v == nil {
-			return fmt.Errorf(`invalid option %s value for field "%s"`, value, f.fd.Name())
+			return protoreflect.Value{}, fmt.Errorf(`invalid option %s value for field "%s"`, value, f.fd.Name())
 		}
 		f.cfg.Logger.V(10).Info("trying to set enum field", "input", value, "name", pname, "result", v.FullName(), "number", v.Number())
-		f.cfg.msg.ProtoReflect().Set(f.fd, protoreflect.ValueOfEnum(v.Number()))
+		return protoreflect.ValueOfEnum(v.Number()), nil
 	case protoreflect.StringKind:
-		f.cfg.msg.ProtoReflect().Set(f.fd, protoreflect.ValueOfString(value))
-	default:
-		return fmt.Errorf("cannot set field %s, kind %s not implemented", f.fd.JSONName(), f.fd.Kind())
+		return protoreflect.ValueOfString(value), nil
 	}
+	return protoreflect.Value{}, fmt.Errorf("cannot set field %s, kind %s not implemented", f.fd.JSONName(), f.fd.Kind())
+}
+
+func (f *flaggable) Set(value string) error {
+	f.cfg.Logger.V(4).Info("setting field", "value", value, "kind", f.fd.Kind().GoString())
+	if f.fd.IsList() {
+		list := f.cfg.msg.ProtoReflect().Mutable(f.fd).List()
+		for _, item := range strings.Split(value, ",") {
+			v, err := f.detect(strings.TrimSpace(item))
+			if err != nil {
+				return err
+			}
+			list.Append(v)
+		}
+		return nil
+	}
+	v, err := f.detect(value)
+	if err != nil {
+		return err
+	}
+	f.cfg.msg.ProtoReflect().Set(f.fd, v)
 	return nil
 }
 

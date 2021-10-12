@@ -5,7 +5,9 @@ import (
 	"reflect"
 	"testing"
 
+	testdata "github.com/protoconf/libprotoconf/testdata/v1"
 	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/types/known/apipb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"google.golang.org/protobuf/types/known/typepb"
@@ -186,6 +188,43 @@ func TestConfig_FlagSet(t *testing.T) {
 			want:    &wrapperspb.DoubleValue{Value: 123.456},
 			wantErr: false,
 		},
+		{
+			name: "string_arr",
+			fields: fields{
+				p:    &testdata.TestConfig{},
+				args: []string{"-strArr", "hello", "-strArr", "world"},
+			},
+			want:    &testdata.TestConfig{StrArr: []string{"hello", "world"}},
+			wantErr: false,
+		},
+		{
+			name: "string_arr_help",
+			fields: fields{
+				p:    &testdata.TestConfig{StrArr: []string{"hello", "world"}},
+				args: []string{"-help"},
+			},
+			want:    &testdata.TestConfig{StrArr: []string{"hello", "world"}},
+			wantErr: true,
+		},
+		{
+			name: "enum_arr_help",
+			fields: fields{
+				p: &testdata.TestConfig{
+					InternalEnumArr: []testdata.TestConfig_InternalEnum{
+						testdata.TestConfig_DEFAULT,
+						testdata.TestConfig_OPTION_A,
+					},
+				},
+				args: []string{"-help"},
+			},
+			want: &testdata.TestConfig{
+				InternalEnumArr: []testdata.TestConfig_InternalEnum{
+					testdata.TestConfig_DEFAULT,
+					testdata.TestConfig_OPTION_A,
+				},
+			},
+			wantErr: true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -227,6 +266,56 @@ func TestConfig_DefaultFlagSet(t *testing.T) {
 			fs := c.DefaultFlagSet()
 			if got := fs.Name(); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("Config.DefaultFlagSet() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_flaggable_Set(t *testing.T) {
+	type fields struct {
+		fd  protoreflect.FieldDescriptor
+		cfg *Config
+	}
+	type args struct {
+		value string
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		wantErr bool
+	}{
+		{
+			name: "message",
+			fields: fields{
+				cfg: NewConfig(&testdata.TestConfig{}),
+				fd:  NewConfig(&testdata.TestConfig{}).msg.ProtoReflect().Descriptor().Fields().ByName(protoreflect.Name("sub_message")),
+			},
+			args: args{
+				value: "empty",
+			},
+			wantErr: true,
+		},
+		{
+			name: "message_list",
+			fields: fields{
+				cfg: NewConfig(&testdata.TestConfig{}),
+				fd:  NewConfig(&testdata.TestConfig{}).msg.ProtoReflect().Descriptor().Fields().ByName(protoreflect.Name("sub_message_arr")),
+			},
+			args: args{
+				value: "empty",
+			},
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			f := &flaggable{
+				fd:  tt.fields.fd,
+				cfg: tt.fields.cfg,
+			}
+			if err := f.Set(tt.args.value); (err != nil) != tt.wantErr {
+				t.Errorf("flaggable.Set() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 	}
