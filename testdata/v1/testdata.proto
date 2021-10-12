@@ -1,0 +1,42 @@
+syntax = "proto3";
+
+package libprotoconf.testdata.v1;
+
+option go_package = "github.com/protoconf/libprotoconf/testdata/v1";
+
+message TestConfig {
+    string str = 1;
+    repeated string str_arr = 2;
+    int32 numeric32 = 3;
+    repeated int32 numeric32_arr = 4;
+    int64 numeric64 = 5;
+    repeated int64 numeric64_arr = 6;
+    uint32 unsigned32 = 7;
+    repeated uint32 unsigned32_arr = 8;
+    uint64 unsigned64 = 9;
+    repeated uint64 unsigned64_arr = 10;
+    float floating_point = 11;
+    repeated float floating_point_arr = 12;
+    GlobalEnum global_enum = 13;
+    repeated GlobalEnum global_enum_arr = 14;
+    InternalEnum internal_enum = 15;
+    repeated InternalEnum internal_enum_arr = 16;
+    SubMessage sub_message = 17;
+    repeated SubMessage sub_message_arr = 18;
+
+    enum InternalEnum {
+        DEFAULT = 0;
+        OPTION_A = 1;
+    }
+
+    message SubMessage {
+        string name = 1;
+        TestConfig recusrive = 2;
+    }
+
+}
+
+enum GlobalEnum {
+    DEFAULT = 0;
+    OPTION_A = 1;
+}
