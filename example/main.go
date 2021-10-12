@@ -5,16 +5,12 @@ import (
 	"os"
 
 	"github.com/protoconf/libprotoconf"
+	testdata "github.com/protoconf/libprotoconf/testdata/v1"
 	"google.golang.org/protobuf/encoding/protojson"
-	"google.golang.org/protobuf/types/known/apipb"
 )
 
 func main() {
-	cfg := &apipb.Api{
-		Name:    "protoconf",
-		Version: "v1",
-	}
-	// cfg := &v1.LibprotoconfConfig{}
+	cfg := &testdata.TestConfig{}
 	lpc := libprotoconf.NewConfig(cfg)
 	lpc.DebugLogger()
 	fs := lpc.DefaultFlagSet()

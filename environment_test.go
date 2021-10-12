@@ -4,6 +4,7 @@ import (
 	"os"
 	"testing"
 
+	testdata "github.com/protoconf/libprotoconf/testdata/v1"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/apipb"
 )
@@ -14,6 +15,7 @@ func TestConfig_Environment(t *testing.T) {
 	}
 	type args struct {
 		prefix string
+		envs   map[string]string
 	}
 	tests := []struct {
 		name    string
@@ -27,7 +29,11 @@ func TestConfig_Environment(t *testing.T) {
 			fields: fields{
 				p: &apipb.Api{},
 			},
-			args:    args{},
+			args: args{
+				envs: map[string]string{
+					"GOOGLE_PROTOBUF_API_VERSION": "v1",
+				},
+			},
 			want:    &apipb.Api{Version: "v1"},
 			wantErr: false,
 		},
@@ -38,16 +44,33 @@ func TestConfig_Environment(t *testing.T) {
 			},
 			args: args{
 				prefix: "test",
+				envs: map[string]string{
+					"TEST_VERSION": "v1",
+				},
 			},
 			want:    &apipb.Api{Version: "v1"},
 			wantErr: false,
 		},
+		{
+			name: "list",
+			fields: fields{
+				p: &testdata.TestConfig{},
+			},
+			args: args{
+				envs: map[string]string{
+					"LIBPROTOCONF_TESTDATA_V1_TESTCONFIG_STR_ARR": "v1,v2",
+				},
+			},
+			want:    &testdata.TestConfig{StrArr: []string{"v1", "v2"}},
+			wantErr: false,
+		},
 		// TODO: Add test cases.
 	}
-	os.Setenv("TEST_VERSION", "v1")
-	os.Setenv("GOOGLE_PROTOBUF_API_VERSION", "v1")
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			for k, v := range tt.args.envs {
+				os.Setenv(k, v)
+			}
 			c := NewConfig(tt.fields.p)
 			c.DebugLogger()
 			c.SetLogger(c.Logger.WithName(t.Name()))
