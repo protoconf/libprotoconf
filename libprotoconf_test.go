@@ -3,10 +3,12 @@ package libprotoconf
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"reflect"
 	"testing"
 
 	v1 "github.com/protoconf/libprotoconf/config/v1"
+	testdata "github.com/protoconf/libprotoconf/testdata/v1"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/types/known/apipb"
@@ -48,6 +50,7 @@ func TestConfig_LoadFromSystemDir(t *testing.T) {
 }
 
 func TestConfig_DetectWorkspace(t *testing.T) {
+	wd, _ := os.Getwd()
 	type fields struct {
 		msg proto.Message
 	}
@@ -59,6 +62,14 @@ func TestConfig_DetectWorkspace(t *testing.T) {
 	}{
 		{
 			name: "test",
+			fields: fields{
+				msg: &testdata.TestConfig{},
+			},
+			want:    filepath.Join(wd, ".libprotoconf"),
+			wantErr: false,
+		},
+		{
+			name: "test_google",
 			fields: fields{
 				msg: &apipb.Api{},
 			},
@@ -91,8 +102,17 @@ func TestConfig_LoadFromWorkspace(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			name:    "test",
-			fields:  fields{msg: &apipb.Api{}},
+			name: "test",
+			fields: fields{
+				msg: &testdata.TestConfig{},
+			},
+			wantErr: false,
+		},
+		{
+			name: "test_google",
+			fields: fields{
+				msg: &apipb.Api{},
+			},
 			wantErr: true,
 		},
 	}

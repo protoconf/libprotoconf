@@ -68,7 +68,7 @@ func (c *Config) LoadFromWorkspace() error {
 func (c *Config) DetectWorkspace() (string, error) {
 	tree := c.getPackageTree()
 	root := "." + tree[len(tree)-1]
-	cwd, err := filepath.Abs(".")
+	cwd, err := os.Getwd()
 	if err != nil {
 		return "", err
 	}
