@@ -46,10 +46,7 @@ func (f *flaggable) String() string {
 		return fmt.Sprintf("[%v]", strings.Join(arr, ", "))
 	}
 	v := f.cfg.msg.ProtoReflect().Get(f.fd)
-	if v.IsValid() {
-		return fmt.Sprintf("%v", v)
-	}
-	return ""
+	return fmt.Sprintf("%v", v)
 }
 
 func (f *flaggable) IsBoolFlag() bool {
