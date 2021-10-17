@@ -7,7 +7,7 @@ import (
 	"reflect"
 	"testing"
 
-	v1 "github.com/protoconf/libprotoconf/config/v1"
+	"github.com/protoconf/libprotoconf/config/v1"
 	testdata "github.com/protoconf/libprotoconf/testdata/v1"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
@@ -21,7 +21,7 @@ func TestConfig_LoadFromSystemDir(t *testing.T) {
 	tests := []struct {
 		name    string
 		fields  fields
-		want    []*v1.LibprotoconfConfig_Loadable
+		want    []*config.LibprotoconfConfig_Loadable
 		wantErr bool
 	}{
 		{
@@ -29,9 +29,9 @@ func TestConfig_LoadFromSystemDir(t *testing.T) {
 			fields: fields{
 				msg: &apipb.Api{},
 			},
-			want: []*v1.LibprotoconfConfig_Loadable{
-				&v1.LibprotoconfConfig_Loadable{Priority: 100, Path: "/etc/google/protobuf"},
-				&v1.LibprotoconfConfig_Loadable{Priority: 100, Path: "/etc/google"},
+			want: []*config.LibprotoconfConfig_Loadable{
+				{Priority: 100, Path: "/etc/google/protobuf"},
+				{Priority: 100, Path: "/etc/google"},
 			},
 			wantErr: false,
 		},
@@ -134,7 +134,7 @@ func TestConfig_LoadFromUserDir(t *testing.T) {
 	tests := []struct {
 		name    string
 		fields  fields
-		want    []*v1.LibprotoconfConfig_Loadable
+		want    []*config.LibprotoconfConfig_Loadable
 		wantErr bool
 	}{
 		{
@@ -143,9 +143,9 @@ func TestConfig_LoadFromUserDir(t *testing.T) {
 				msg:  &apipb.Api{},
 				home: "/tmp",
 			},
-			want: []*v1.LibprotoconfConfig_Loadable{
-				&v1.LibprotoconfConfig_Loadable{Priority: 90, Path: "/tmp/.google/protobuf"},
-				&v1.LibprotoconfConfig_Loadable{Priority: 90, Path: "/tmp/.google"},
+			want: []*config.LibprotoconfConfig_Loadable{
+				{Priority: 90, Path: "/tmp/.google/protobuf"},
+				{Priority: 90, Path: "/tmp/.google"},
 			},
 			wantErr: false,
 		},
@@ -181,7 +181,7 @@ func TestConfig_LoadFromDefaultDirs(t *testing.T) {
 	tests := []struct {
 		name   string
 		fields fields
-		want   []*v1.LibprotoconfConfig_Loadable
+		want   []*config.LibprotoconfConfig_Loadable
 	}{
 		{
 			name: "test",
@@ -189,11 +189,11 @@ func TestConfig_LoadFromDefaultDirs(t *testing.T) {
 				msg:  &apipb.Api{},
 				home: "/tmp",
 			},
-			want: []*v1.LibprotoconfConfig_Loadable{
-				&v1.LibprotoconfConfig_Loadable{Priority: 100, Path: "/etc/google/protobuf"},
-				&v1.LibprotoconfConfig_Loadable{Priority: 100, Path: "/etc/google"},
-				&v1.LibprotoconfConfig_Loadable{Priority: 90, Path: "/tmp/.google/protobuf"},
-				&v1.LibprotoconfConfig_Loadable{Priority: 90, Path: "/tmp/.google"},
+			want: []*config.LibprotoconfConfig_Loadable{
+				{Priority: 100, Path: "/etc/google/protobuf"},
+				{Priority: 100, Path: "/etc/google"},
+				{Priority: 90, Path: "/tmp/.google/protobuf"},
+				{Priority: 90, Path: "/tmp/.google"},
 			},
 		},
 	}
