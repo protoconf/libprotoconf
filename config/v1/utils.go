@@ -1,4 +1,4 @@
-package v1
+package config
 
 type ByPrio []*LibprotoconfConfig_Loadable
 

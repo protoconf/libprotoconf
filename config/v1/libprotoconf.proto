@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package libprotoconf.config.v1;
 
-option go_package = "github.com/protoconf/libprotoconf/config/v1";
+option go_package = "github.com/protoconf/libprotoconf/config/v1;config";
 
 message LibprotoconfConfig {
     repeated Loadable config_dirs = 1;
