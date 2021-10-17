@@ -10,7 +10,7 @@ import (
 	"github.com/go-logr/logr"
 	"github.com/go-logr/logr/funcr"
 	"github.com/go-logr/stdr"
-	v1 "github.com/protoconf/libprotoconf/config/v1"
+	"github.com/protoconf/libprotoconf/config/v1"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
@@ -19,14 +19,14 @@ type Config struct {
 	msg          proto.Message
 	Logger       logr.Logger
 	envKeyPrefix string
-	config       *v1.LibprotoconfConfig
+	config       *config.LibprotoconfConfig
 }
 
 func NewConfig(p proto.Message) *Config {
 	c := &Config{
 		msg:    p,
 		Logger: funcr.New(func(prefix, args string) {}, funcr.Options{}),
-		config: &v1.LibprotoconfConfig{},
+		config: &config.LibprotoconfConfig{},
 	}
 	c.SetEnvKeyPrefix(string(p.ProtoReflect().Descriptor().FullName()))
 	return c
@@ -97,12 +97,12 @@ func (c *Config) getPackageTree() []string {
 func (c *Config) AppendLoadDir(priority uint32, paths ...string) error {
 	for _, path := range paths {
 		if abs, err := filepath.Abs(path); err == nil {
-			c.config.ConfigDirs = append(c.config.ConfigDirs, &v1.LibprotoconfConfig_Loadable{Priority: priority, Path: abs})
+			c.config.ConfigDirs = append(c.config.ConfigDirs, &config.LibprotoconfConfig_Loadable{Priority: priority, Path: abs})
 		} else {
 			return err
 		}
 	}
-	sort.Stable(v1.ByPrio(c.config.ConfigDirs))
+	sort.Stable(config.ByPrio(c.config.ConfigDirs))
 	return nil
 }
 

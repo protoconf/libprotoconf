@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package libprotoconf.testdata.v1;
 
-option go_package = "github.com/protoconf/libprotoconf/testdata/v1";
+option go_package = "github.com/protoconf/libprotoconf/testdata/v1;testdata";
 
 message TestConfig {
     string str = 1;
