@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"google.golang.org/protobuf/reflect/protoreflect"
+	"google.golang.org/protobuf/types/dynamicpb"
 )
 
 type flaggable struct {
@@ -142,8 +143,16 @@ func (c *Config) PopulateFlagSet(fs *flag.FlagSet) {
 	c.iterateFields(func(f protoreflect.FieldDescriptor) error {
 		c.Logger.V(4).Info("got field", "name", f.Name(), "fullName", f.FullName(), "type", f.Kind().GoString())
 		switch f.Kind() {
-		case protoreflect.MessageKind, protoreflect.GroupKind, protoreflect.BytesKind:
+		case protoreflect.GroupKind, protoreflect.BytesKind:
 			return nil
+		case protoreflect.MessageKind:
+			msgDesc := f.Message()
+			l := NewConfig(dynamicpb.NewMessage(msgDesc))
+			l.SetEnvKeyPrefix(strings.Join([]string{c.envKeyPrefix, toEnvKey(f.JSONName())}, "_"))
+			l.DefaultFlagSet().VisitAll(func(fl *flag.Flag) {
+				fs.Var(fl.Value, strings.Join([]string{f.JSONName(), fl.Name}, "-"), fl.Usage)
+
+			})
 		case protoreflect.EnumKind:
 			fl := &flaggable{fd: f, cfg: c}
 			values := f.Enum().Values()

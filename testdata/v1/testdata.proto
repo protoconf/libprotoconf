@@ -31,7 +31,7 @@ message TestConfig {
 
     message SubMessage {
         string name = 1;
-        TestConfig recusrive = 2;
+        // TestConfig recusrive = 2;
     }
 
 }
